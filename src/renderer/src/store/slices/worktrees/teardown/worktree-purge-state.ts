@@ -21,6 +21,7 @@ import { buildWorktreePurgeSurfacePatch } from './worktree-purge-surface-patch'
 import { noticeRemovedUnsavedFiles } from './removed-workspace-unsaved-files'
 import { buildHostTwinPurgeState, collectHostTwinPurgeScopes } from './host-twin-worktree-purge'
 import { composeWorktreeHostIdentity } from '../../../../../../shared/worktree/host-qualified-identity'
+import { splitViewPairAfterRemoval } from '../../worktree-split-view'
 
 /**
  * Builds a bulk cleanup patch and clears auxiliary warning records without requiring individual
@@ -192,6 +193,7 @@ export function buildFullWorktreePurgeState(
     ),
     activeWorktreeId: removedActive ? null : s.activeWorktreeId,
     activeWorkspaceExecutionHostId: removedActive ? null : s.activeWorkspaceExecutionHostId,
+    ...splitViewPairAfterRemoval(s, worktreeIdSet),
     activeWorkspaceKey: (() => {
       if (s.activeWorkspaceKey && worktreeIdSet.has(s.activeWorkspaceKey)) {
         return null
