@@ -3,6 +3,8 @@ import React from 'react'
 import { WorktreeCardSurface } from './worktree-card-surface'
 import type { WorktreeCardProps } from './worktree-card-model'
 import { useWorktreeCardController } from './use-worktree-card-controller'
+import { useAppStore } from '@/store'
+import { selectWorktreeSplitPartnerId } from '@/store/slices/worktree-split-view'
 
 export { shouldBeginWorktreeRename } from './worktree-card-model'
 export type { ActiveSurfaceVariant } from './worktree-card-model'
@@ -43,12 +45,17 @@ const WorktreeCard = React.memo(function WorktreeCard({
   affiliateListMode = false,
   statusPrDisplay = null
 }: WorktreeCardProps): React.JSX.Element {
+  // Why: both halves of an on-screen split are being viewed, so both rows read as active.
+  const isShownSplitPartner = useAppStore(
+    (state) =>
+      state.activeView === 'terminal' && selectWorktreeSplitPartnerId(state) === worktree.id
+  )
   const card = useWorktreeCardController({
     worktree,
     repo,
     isActive,
-    isActiveSurface,
-    activeSurfaceVariant,
+    isActiveSurface: isActiveSurface || isShownSplitPartner,
+    activeSurfaceVariant: isShownSplitPartner ? 'primary' : activeSurfaceVariant,
     isMultiSelected,
     revealHighlight,
     revealHighlightTone,

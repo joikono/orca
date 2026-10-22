@@ -9,7 +9,8 @@ export default function TabGroupSplitLayout({
   worktreeId,
   focusedGroupId,
   isWorktreeActive,
-  ownsWorkspaceInput = true
+  ownsWorkspaceInput = true,
+  splitHeader
 }: {
   layout: TabGroupLayoutNode
   worktreeId: string
@@ -17,6 +18,8 @@ export default function TabGroupSplitLayout({
   isWorktreeActive: boolean
   /** False for a split-view partner; see WorktreeSplitSurface. */
   ownsWorkspaceInput?: boolean
+  /** Replaces the top drag strip while this worktree is one half of a split view. */
+  splitHeader?: React.ReactNode
 }): React.JSX.Element {
   return (
     <WorkspaceTabDragLayer worktreeId={worktreeId} enabled={isWorktreeActive && ownsWorkspaceInput}>
@@ -41,7 +44,12 @@ export default function TabGroupSplitLayout({
           ref={setDragRootNode}
           className="flex flex-col flex-1 min-w-0 min-h-0 overflow-hidden border-l border-border"
         >
-          <div className="h-[4px] shrink-0 bg-card" data-terminal-focus-release-surface="true" />
+          <div
+            className={splitHeader ? 'shrink-0 bg-card' : 'h-[4px] shrink-0 bg-card'}
+            data-terminal-focus-release-surface="true"
+          >
+            {splitHeader}
+          </div>
           <div className="flex flex-1 min-w-0 min-h-0 overflow-hidden">
             <TabGroupSplitNodeTree
               layout={layout}

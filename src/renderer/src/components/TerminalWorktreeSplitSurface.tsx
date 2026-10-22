@@ -12,6 +12,7 @@ import {
 import TabGroupSplitLayout from './tab-group/TabGroupSplitLayout'
 import { WorkspacePaneOverlayLayers } from './WorkspacePaneOverlayLayers'
 import { WORKTREE_SPLIT_LEFT_FLEX_VAR } from '../store/slices/worktree-split-view'
+import { WorktreeSplitSurfaceHeader } from './worktree-split-surface-header'
 
 export const WorktreeSplitSurface = React.memo(function WorktreeSplitSurface({
   worktreeId,
@@ -94,6 +95,14 @@ export const WorktreeSplitSurface = React.memo(function WorktreeSplitSurface({
         focusedGroupId={focusedGroupId}
         isWorktreeActive={isVisible}
         ownsWorkspaceInput={ownsWorkspaceInput}
+        splitHeader={
+          isSplitHalf ? (
+            <WorktreeSplitSurfaceHeader
+              worktreeId={worktreeId}
+              ownsWorkspaceInput={ownsWorkspaceInput}
+            />
+          ) : undefined
+        }
       />
       <WorkspacePaneOverlayLayers
         worktreeId={worktreeId}
