@@ -1,0 +1,60 @@
+name: TMP mixed git bench
+on:
+  push:
+    branches: [nwparker/tmp-mixed-git]
+permissions:
+  contents: read
+env:
+  WSL_UTF8: '1'
+  ROOTFS_URL: https://releases.ubuntu.com/24.04.4/ubuntu-24.04.4-wsl-amd64.wsl
+  ROOTFS_SHA256: 9b2f7730dc68227dd04a9f3e5eab86ad85caf556b8606ad94f1f29ff5c4fd3f5
+jobs:
+  bench:
+    runs-on: windows-2025
+    timeout-minutes: 150
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+          sparse-checkout: tmp-bench
+      - name: Environment
+        run: |
+          wsl.exe --version
+          git --version
+          git config --system --list --show-origin | Select-String -Pattern 'autocrlf|checkstat'
+          Get-CimInstance Win32_Processor | Select-Object Name, NumberOfLogicalProcessors
+      - name: Import distro
+        run: |
+          $f = Join-Path $env:RUNNER_TEMP 'ubuntu.wsl'
+          Invoke-WebRequest $env:ROOTFS_URL -OutFile $f
+          if ((Get-FileHash $f -Algorithm SHA256).Hash.ToLowerInvariant() -ne $env:ROOTFS_SHA256) { throw 'checksum' }
+          New-Item -ItemType Directory -Force C:\wsl\bench | Out-Null
+          wsl.exe --import bench C:\wsl\bench $f --version 2
+          wsl.exe -d bench --exec bash -c "command -v git >/dev/null || (apt-get update -qq && apt-get install -y -qq git); git --version; git config --global safe.directory '*'; git config --global user.name b; git config --global user.email b@x; git config --global --get core.autocrlf || echo 'wsl autocrlf: unset'"
+      - name: Build the repo on C (Windows git, autocrlf=true like a default Git for Windows install)
+        run: |
+          git config --global core.autocrlf true
+          git config --global safe.directory '*'
+          git config --global user.name b; git config --global user.email b@x
+          New-Item -ItemType Directory -Force C:\bench | Out-Null
+          Copy-Item tmp-bench\* C:\bench\
+          node C:\bench\gen.js C:\bench\gen 40
+          git -C C:\bench\gen init -q -b main
+          git -C C:\bench\gen add -A 2>$null
+          git -C C:\bench\gen commit -qm init
+          git clone -q C:\bench\gen C:\bench\repo
+          Remove-Item -Recurse -Force C:\bench\gen
+          $b = [IO.File]::ReadAllBytes('C:\bench\repo\README.md'); "README CR bytes: $(@($b | Where-Object { $_ -eq 13 }).Count)"
+          (git -C C:\bench\repo ls-files | Measure-Object).Count
+          wsl.exe -d bench --exec bash -c "sed -i 's/\r$//' /mnt/c/bench/wslrun.sh; chmod +x /mnt/c/bench/wslrun.sh"
+      - name: Bench
+        run: C:\bench\bench.ps1
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: mixed-git-results
+          path: C:\bench\results.jsonl
+          if-no-files-found: warn
