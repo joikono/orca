@@ -1,5 +1,5 @@
-import React from 'react'
-import { Columns2 } from 'lucide-react'
+import React, { useEffect, useState } from 'react'
+import { Columns2, Pause } from 'lucide-react'
 
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { useNow } from '@/hooks/use-now'
@@ -9,6 +9,7 @@ import { useAppStore } from '@/store'
 import { isWorktreeInSplitViewPair } from '@/store/slices/worktree-split-view'
 import type { WorktreeCardPrDisplay } from './worktree-card-pr-display'
 import { getReviewLabel, ReviewIcon } from './worktree-review-helpers'
+import { useWorktreeActivityStatus } from './use-worktree-activity-status'
 
 const PROMPT_IDLE_WARN_MS = 15 * 60_000
 const PROMPT_IDLE_ALERT_MS = 60 * 60_000
@@ -38,21 +39,53 @@ function promptIdleTone(elapsedMs: number): string {
   return 'text-muted-foreground'
 }
 
+// Why module scope: cards remount on sidebar reflow, and the stop time must not reset with them.
+const stoppedAtByWorktreeId = new Map<string, number>()
+
+/** When the worktree's agents last stopped working after the prompt, or null while one still runs. */
+function usePromptTimerStoppedAt(worktreeId: string, lastPromptAt: number): number | null {
+  const status = useWorktreeActivityStatus(worktreeId)
+  const isRunning = status === 'working' || status === 'monitoring'
+  const [stoppedAt, setStoppedAt] = useState<number | null>(null)
+  useEffect(() => {
+    if (isRunning) {
+      stoppedAtByWorktreeId.delete(worktreeId)
+      setStoppedAt(null)
+      return
+    }
+    const known = stoppedAtByWorktreeId.get(worktreeId)
+    const next = known !== undefined && known >= lastPromptAt ? known : Date.now()
+    stoppedAtByWorktreeId.set(worktreeId, next)
+    setStoppedAt(next)
+  }, [isRunning, lastPromptAt, worktreeId])
+  return stoppedAt
+}
+
 // Why split out: only cards with a recorded prompt subscribe to the 1s tick.
-function PromptIdleTimerLabel({ lastPromptAt }: { lastPromptAt: number }): React.JSX.Element {
-  const now = useNow(1000)
-  const elapsedMs = Math.max(0, now - lastPromptAt)
+function PromptIdleTimerLabel({
+  worktreeId,
+  lastPromptAt
+}: {
+  worktreeId: string
+  lastPromptAt: number
+}): React.JSX.Element {
+  const stoppedAt = usePromptTimerStoppedAt(worktreeId, lastPromptAt)
+  const now = useNow(1000, stoppedAt === null)
+  const elapsedMs = Math.max(0, (stoppedAt ?? now) - lastPromptAt)
   const label = formatPromptIdleElapsed(elapsedMs)
   return (
     <Tooltip>
       <TooltipTrigger asChild>
         <span
           className={cn(
-            'shrink-0 text-[10px] leading-none tabular-nums',
-            promptIdleTone(elapsedMs)
+            'inline-flex shrink-0 items-center gap-0.5 text-[10px] leading-none tabular-nums',
+            promptIdleTone(elapsedMs),
+            stoppedAt !== null && 'opacity-60'
           )}
           data-worktree-prompt-idle-timer=""
+          data-stopped={stoppedAt !== null ? '' : undefined}
         >
+          {stoppedAt !== null ? <Pause className="size-2.5" /> : null}
           {label}
         </span>
       </TooltipTrigger>
@@ -131,7 +164,9 @@ export function WorktreeCardHeaderTrailing({
   const lastPromptAt = useAppStore((state) => state.lastPromptAtByWorktreeId?.[worktreeId])
   return (
     <div className="flex shrink-0 items-center gap-1.5">
-      {lastPromptAt !== undefined ? <PromptIdleTimerLabel lastPromptAt={lastPromptAt} /> : null}
+      {lastPromptAt !== undefined ? (
+        <PromptIdleTimerLabel worktreeId={worktreeId} lastPromptAt={lastPromptAt} />
+      ) : null}
       <SplitPairMarker worktreeId={worktreeId} />
       {prDisplay ? <ReviewNumberBadge review={prDisplay} /> : null}
     </div>
