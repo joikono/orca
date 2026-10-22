@@ -167,7 +167,6 @@ export function createWorkspaceTerminalHydrationActions(
           // Why here: set with activeWorktreeId so the first frame already renders the split.
           worktreeSplitViewPair: restorableWorktreeSplitViewPair(
             session.worktreeSplitViewPair,
-            activeWorktreeId,
             validWorktreeIds
           ),
           restoredRuntimeHostIdByWorkspaceSessionKey:

@@ -8,6 +8,7 @@ import { markTerminalBracketedPasteInterrupted } from '../terminal-bracketed-pas
 import { isPassiveTerminalInputReport } from '../terminal-passive-input-report'
 import { dismissRetainedProgramResult } from '@/lib/program-status/result-retention'
 import { isRetainedProgramResult } from '@/lib/program-status/row'
+import { isTerminalPromptSubmit } from '@/store/slices/worktree-prompt-activity'
 
 import { REATTACH_IDLE_AGENT_CURSOR_RESET_DELAY_MS } from './foreground-output-scan'
 
@@ -161,6 +162,9 @@ export function installInterruptInputIntent(session: ConnectPanePtySession): voi
     // submit keystroke into a waiting AskUserQuestion pane becomes the
     // "question answered" signal no hook will ever deliver.
     session.questionAnsweredInference.observeSentTerminalInput(data)
+    if (isTerminalPromptSubmit(data)) {
+      useAppStore.getState().recordWorktreePrompt(session.deps.worktreeId)
+    }
     if (!isPassiveTerminalInputReport(data)) {
       dismissRetainedProgramResult(session.cacheKey, useAppStore.getState())
     }

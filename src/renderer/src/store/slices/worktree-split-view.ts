@@ -39,7 +39,8 @@ export function isWorktreeInSplitViewPair(
   )
 }
 
-/** The other side of the split while the active worktree is in the pair, else null. */
+/** The other side of the split while the active worktree is in the pair, else null.
+ *  Why the pair outlives a visit elsewhere: going back to either side brings the split back. */
 export function selectWorktreeSplitPartnerId(
   state: Pick<AppState, 'worktreeSplitViewPair' | 'activeWorktreeId'>
 ): string | null {
@@ -93,16 +94,6 @@ export function splitViewPairAfterHostTwinPurge(
   return pair &&
     (purgedSide(pair.leftWorktreeId, pair.leftExecutionHostId) ||
       purgedSide(pair.rightWorktreeId, pair.rightExecutionHostId))
-    ? { worktreeSplitViewPair: null }
-    : {}
-}
-
-/** State patch that ends the split once the user activates a worktree outside the pair. */
-export function splitViewPairAfterActivation(
-  s: Partial<Pick<AppState, 'worktreeSplitViewPair'>>,
-  worktreeId: string | null
-): Partial<Pick<AppState, 'worktreeSplitViewPair'>> {
-  return s.worktreeSplitViewPair && !isWorktreeInSplitViewPair(s.worktreeSplitViewPair, worktreeId)
     ? { worktreeSplitViewPair: null }
     : {}
 }

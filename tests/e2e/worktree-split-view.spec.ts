@@ -124,18 +124,12 @@ test('splits worktrees from two different repositories', async ({ orcaPage }) =>
     await expect(left).toBeVisible({ timeout: 20_000 })
     await expect(right).toBeVisible()
 
-    // Going to a worktree outside the pair ends the split; coming back stays single.
+    // Going to a worktree outside the pair shows it alone; coming back to either side restores the split.
     const outsideWorktreeId = await getSecondaryWorktreeId(orcaPage)
     await sidebarRow(orcaPage, outsideWorktreeId).click()
     await expect.poll(() => getActiveWorktreeId(orcaPage)).toBe(outsideWorktreeId)
     await expect(left).toHaveCount(0)
-    await sidebarRow(orcaPage, rightWorktreeId).click()
-    await expect.poll(() => getActiveWorktreeId(orcaPage)).toBe(rightWorktreeId)
-    await expect(left).toHaveCount(0)
-
-    // The previous pair no longer blocks pairing the same rows again.
-    await sidebarRow(orcaPage, leftWorktreeId).click({ button: 'right' })
-    await orcaPage.getByRole('menuitem', { name: OPEN_SPLIT_VIEW }).click()
+    await sidebarRow(orcaPage, leftWorktreeId).click()
     await expect.poll(() => getActiveWorktreeId(orcaPage)).toBe(leftWorktreeId)
     await expect(left).toBeVisible({ timeout: 20_000 })
     await expect(right).toBeVisible()

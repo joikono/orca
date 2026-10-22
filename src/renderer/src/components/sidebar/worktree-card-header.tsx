@@ -12,6 +12,7 @@ import { resolveRepoHeaderColor } from './project-header-color'
 import { formatSparseDirectoryPreview, shouldBeginWorktreeRename } from './worktree-card-model'
 import type { WorktreeCardPresentation } from './worktree-card-presentation'
 import { WorktreeCardSshHostControl } from './WorktreeCardSshHostControl'
+import { WorktreeCardHeaderTrailing } from './worktree-card-header-trailing'
 import { WorktreeTitleInlineRename } from './WorktreeTitleInlineRename'
 import type { WorktreeCardController } from './use-worktree-card-controller'
 
@@ -83,7 +84,8 @@ export function WorktreeCardHeader({
     titleRenaming,
     handleOpenRenameErrorDialog,
     isFolder,
-    handleWorkspaceQuickAction
+    handleWorkspaceQuickAction,
+    prDisplay
   } = card
   const {
     showPinnedRepoIcon,
@@ -270,6 +272,8 @@ export function WorktreeCardHeader({
 
         {showTitleRowIndicators && titleRowIndicators}
       </div>
+
+      <WorktreeCardHeaderTrailing worktreeId={worktree.id} prDisplay={prDisplay} />
 
       {showHeaderActions && (
         <div className="ml-auto flex shrink-0 items-center justify-center gap-1 pr-1.5">

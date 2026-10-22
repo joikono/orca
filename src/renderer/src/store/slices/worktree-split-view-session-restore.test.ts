@@ -88,7 +88,7 @@ describe('worktree split view session restore', () => {
     expect(store.getState().worktreeSplitViewPair).toEqual(PAIR)
   })
 
-  it('ends the split when a scoped merge moves focus outside the pair', () => {
+  it('keeps the pair when a scoped merge moves focus outside it', () => {
     const WT_C = 'repo1::/path/c'
     const store = storeWithWorktrees([WT_A, WT_B, WT_C])
     store.setState({ activeWorktreeId: WT_A, worktreeSplitViewPair: PAIR })
@@ -104,7 +104,7 @@ describe('worktree split view session restore', () => {
     )
 
     expect(store.getState().activeWorktreeId).toBe(WT_C)
-    expect(store.getState().worktreeSplitViewPair).toBeNull()
+    expect(store.getState().worktreeSplitViewPair).toEqual(PAIR)
   })
 
   it('keeps the live split when a scoped merge leaves focus inside the pair', () => {
@@ -118,6 +118,31 @@ describe('worktree split view session restore', () => {
       })
 
     expect(store.getState().activeWorktreeId).toBe(WT_A)
+    expect(store.getState().worktreeSplitViewPair).toEqual(PAIR)
+  })
+
+  it('restores a pair the session left while a third worktree was active', () => {
+    const WT_C = 'repo1::/path/c'
+    const store = storeWithWorktrees([WT_A, WT_B, WT_C])
+    store.getState().hydrateWorkspaceSession(
+      sessionWith({
+        worktreeSplitViewPair: PAIR,
+        activeWorktreeId: WT_C,
+        activeTabId: 'tab-c',
+        tabsByWorktree: {
+          [WT_A]: [makeTab({ id: 'tab-a', worktreeId: WT_A })],
+          [WT_B]: [makeTab({ id: 'tab-b', worktreeId: WT_B })],
+          [WT_C]: [makeTab({ id: 'tab-c', worktreeId: WT_C })]
+        },
+        terminalLayoutsByTabId: {
+          'tab-a': makeLayout(),
+          'tab-b': makeLayout(),
+          'tab-c': makeLayout()
+        }
+      })
+    )
+
+    expect(store.getState().activeWorktreeId).toBe(WT_C)
     expect(store.getState().worktreeSplitViewPair).toEqual(PAIR)
   })
 

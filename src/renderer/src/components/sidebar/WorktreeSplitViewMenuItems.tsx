@@ -16,11 +16,9 @@ export function WorktreeSplitViewMenuItems({
   executionHostId: ExecutionHostId | undefined
   disabled: boolean
 }): React.JSX.Element | null {
-  // Why the active check too: a pair the user navigated away from is not on screen to close.
-  const isPaired = useAppStore(
-    (state) =>
-      isWorktreeInSplitViewPair(state.worktreeSplitViewPair, worktreeId) &&
-      isWorktreeInSplitViewPair(state.worktreeSplitViewPair, state.activeWorktreeId)
+  // Why no active check: the pair survives visits elsewhere, so it can be closed from either row.
+  const isPaired = useAppStore((state) =>
+    isWorktreeInSplitViewPair(state.worktreeSplitViewPair, worktreeId)
   )
   const canOpen = useAppStore(
     (state) => state.activeWorktreeId !== null && state.activeWorktreeId !== worktreeId

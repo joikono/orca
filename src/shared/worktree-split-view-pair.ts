@@ -19,18 +19,16 @@ export const worktreeSplitViewPairSchema = z
   })
   .nullable()
 
-/** The persisted pair when it can still be shown beside `activeWorktreeId`, else null. */
+/** The persisted pair when both sides still exist, else null; it shows once either side is active. */
 export function restorableWorktreeSplitViewPair(
   pair: WorktreeSplitViewPair | null | undefined,
-  activeWorktreeId: string | null,
   validWorktreeIds: ReadonlySet<string>
 ): WorktreeSplitViewPair | null {
   if (
     !pair ||
     pair.leftWorktreeId === pair.rightWorktreeId ||
     !validWorktreeIds.has(pair.leftWorktreeId) ||
-    !validWorktreeIds.has(pair.rightWorktreeId) ||
-    (activeWorktreeId !== pair.leftWorktreeId && activeWorktreeId !== pair.rightWorktreeId)
+    !validWorktreeIds.has(pair.rightWorktreeId)
   ) {
     return null
   }
