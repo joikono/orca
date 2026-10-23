@@ -33,6 +33,7 @@ import {
   selectFolderWorkspaces,
   selectWorktreesByRepo
 } from '../../../workspace-record-selectors'
+import { splitViewPairAfterHostTwinPurge } from '../../worktree-split-view'
 
 type PublisherRow = {
   id: string
@@ -248,6 +249,7 @@ export function buildHostTwinPurgeState(
       ...tabPrefixedSleeping,
       ...omitSleepingAgentSessionsForWorktrees(tabPrefixedSleeping, new Set(), sshRecordPaneKeys)
     }),
-    ...twinSelectionPatch(s, twinHostIds, hostId)
+    ...twinSelectionPatch(s, twinHostIds, hostId),
+    ...splitViewPairAfterHostTwinPurge(s, twinIds, hostId)
   }
 }

@@ -8,15 +8,21 @@ export default function TabGroupSplitLayout({
   layout,
   worktreeId,
   focusedGroupId,
-  isWorktreeActive
+  isWorktreeActive,
+  ownsWorkspaceInput = true,
+  splitHeader
 }: {
   layout: TabGroupLayoutNode
   worktreeId: string
   focusedGroupId?: string
   isWorktreeActive: boolean
+  /** False for a split-view partner; see WorktreeSplitSurface. */
+  ownsWorkspaceInput?: boolean
+  /** Replaces the top drag strip while this worktree is one half of a split view. */
+  splitHeader?: React.ReactNode
 }): React.JSX.Element {
   return (
-    <WorkspaceTabDragLayer worktreeId={worktreeId} enabled={isWorktreeActive}>
+    <WorkspaceTabDragLayer worktreeId={worktreeId} enabled={isWorktreeActive && ownsWorkspaceInput}>
       {({ isTabDragActive, hoveredTabInsertion, setDragRootNode }) => (
         /* Why: the 10px drag strip sits ABOVE the split layout — lifted out of
           each pane — so vertical split resize handles don't extend into the
@@ -38,13 +44,19 @@ export default function TabGroupSplitLayout({
           ref={setDragRootNode}
           className="flex flex-col flex-1 min-w-0 min-h-0 overflow-hidden border-l border-border"
         >
-          <div className="h-[4px] shrink-0 bg-card" data-terminal-focus-release-surface="true" />
+          <div
+            className={splitHeader ? 'shrink-0 bg-card' : 'h-[4px] shrink-0 bg-card'}
+            data-terminal-focus-release-surface="true"
+          >
+            {splitHeader}
+          </div>
           <div className="flex flex-1 min-w-0 min-h-0 overflow-hidden">
             <TabGroupSplitNodeTree
               layout={layout}
               worktreeId={worktreeId}
               focusedGroupId={focusedGroupId}
               isWorktreeActive={isWorktreeActive}
+              ownsWorkspaceInput={ownsWorkspaceInput}
               isTabDragActive={isTabDragActive}
               hoveredTabInsertion={hoveredTabInsertion}
             />

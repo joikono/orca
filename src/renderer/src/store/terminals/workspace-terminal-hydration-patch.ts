@@ -13,6 +13,7 @@ export type WorkspaceHydrationPatch = Pick<
   | 'activeWorkspaceExecutionHostId'
   | 'activeTabId'
   | 'activeTabIdByWorktree'
+  | 'worktreeSplitViewPair'
   | 'restoredRuntimeHostIdByWorkspaceSessionKey'
   | 'repos'
   | 'tabsByWorktree'
@@ -143,9 +144,10 @@ export function targetScopedWorkspaceHydrationPatch(
       everActivatedWorktreeIds.add(workspaceKey)
     }
   }
+  const activeWorktreeId = activeOutsideScope ? state.activeWorktreeId : hydrated.activeWorktreeId
   return {
     activeRepoId: activeOutsideScope ? state.activeRepoId : hydrated.activeRepoId,
-    activeWorktreeId: activeOutsideScope ? state.activeWorktreeId : hydrated.activeWorktreeId,
+    activeWorktreeId,
     activeWorkspaceKey: activeOutsideScope ? state.activeWorkspaceKey : hydrated.activeWorkspaceKey,
     activeWorkspaceExecutionHostId: activeOutsideScope
       ? state.activeWorkspaceExecutionHostId
